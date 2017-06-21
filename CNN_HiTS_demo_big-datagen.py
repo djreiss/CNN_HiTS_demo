@@ -80,30 +80,61 @@ from keras.utils.vis_utils import plot_model, model_to_dot
 # set dimensions ordering (depth as index 1)
 import keras
 keras.backend.set_image_dim_ordering('th')
+from keras.layers.advanced_activations import LeakyReLU
 
-def make_model(compile=True, epochs=100, lrate=0.01, decay=None):
+# 0.04 and 0.5 and 1./100000. are params from Deep-HiTS paper
+def make_model(compile=True, epochs=100, lrate=0.04, dropout=0.5, decay=1./100000.,
+               momentum=0.0, use_leaky=True):
     model = Sequential()
     model.add(ZeroPadding2D((3, 3), input_shape = (4, 21, 21)))
-    model.add(Convolution2D(32, (4, 4), activation='relu'))
+    if not use_leaky:
+        model.add(Convolution2D(32, (4, 4), activation='relu'))
+    else:
+        model.add(Convolution2D(32, (4, 4)))
+        model.add(LeakyReLU(alpha=0.01))
     model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(32, (3, 3), activation='relu'))
+    if not use_leaky:
+        model.add(Convolution2D(32, (3, 3), activation='relu'))
+    else:
+        model.add(Convolution2D(32, (3, 3)))
+        model.add(LeakyReLU(alpha=0.01))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(64, (3, 3), activation='relu'))
+    if not use_leaky:
+        model.add(Convolution2D(64, (3, 3), activation='relu'))
+    else:
+        model.add(Convolution2D(64, (3, 3)))
+        model.add(LeakyReLU(alpha=0.01))
     model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(64, (3, 3), activation='relu'))
+    if not use_leaky:
+        model.add(Convolution2D(64, (3, 3), activation='relu'))
+    else:
+        model.add(Convolution2D(64, (3, 3)))
+        model.add(LeakyReLU(alpha=0.01))
     model.add(ZeroPadding2D((1, 1)))
-    model.add(Convolution2D(64, (3, 3), activation='relu'))
+    if not use_leaky:
+        model.add(Convolution2D(64, (3, 3), activation='relu'))
+    else:
+        model.add(Convolution2D(64, (3, 3)))
+        model.add(LeakyReLU(alpha=0.01))
     model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Flatten())
-    model.add(Dense(64, activation='relu'))
-    if epochs <= 2:
-        model.add(Dropout(0.1))
-    model.add(Dense(64, activation='relu'))
-    if epochs <= 2:
-        model.add(Dropout(0.1))
+    if not use_leaky:
+        model.add(Dense(64, activation='relu'))
+    else:
+        model.add(Dense(64))
+        model.add(LeakyReLU(alpha=0.01))
+    if dropout is not None:
+        model.add(Dropout(dropout))
+    if not use_leaky:
+        model.add(Dense(64, activation='relu'))
+    else:
+        model.add(Dense(64))
+        model.add(LeakyReLU(alpha=0.01))
+    if dropout is not None:
+        model.add(Dropout(dropout))
     model.add(Dense(2, activation='softmax'))
     
     if compile:
@@ -121,7 +152,7 @@ def make_model(compile=True, epochs=100, lrate=0.01, decay=None):
                 decay = lrate/epochs
             else:
                 decay = lrate/100.
-        opt = keras.optimizers.SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=False)
+        opt = keras.optimizers.SGD(lr=lrate, momentum=momentum, decay=decay, nesterov=False)
 
         # Let's train the model using RMSprop
         model.compile(loss='mean_squared_error', #categorical_crossentropy',
@@ -389,23 +420,25 @@ class SGDLearningRateTracker(keras.callbacks.Callback):
 
 # In[ ]:
 
-epochs = 1000
-model = make_model(compile=True, epochs=epochs, lrate=0.001, decay=1/400.)
+epochs = 10000
+model = make_model(compile=True, epochs=epochs, lrate=0.04, decay=1./100000.)
 
 train_generator = data_generator_train()
 valid_generator = data_generator_valid()
 
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-early_stopping = EarlyStopping(monitor='val_loss', patience=3000)
+early_stopping = EarlyStopping(monitor='val_loss', patience=1000)
 checkpointing = ModelCheckpoint('./best_model.hdf5', monitor='val_loss', verbose=1,
                                 save_best_only=True, save_weights_only=False,
                                 mode='auto', period=1)
 
 rateMonitoring = SGDLearningRateTracker()
 
+# steps_per_epoch=5000: 5000/32=156 chunks trained per epoch,
+# then validation_steps=500: 500/32=15.6 chunks tested per epoch
 model.fit_generator(generator=train_generator, 
-                    validation_data=valid_generator, validation_steps=1,
-                    epochs=epochs, steps_per_epoch=400,
+                    validation_data=valid_generator, validation_steps=500,
+                    epochs=epochs, steps_per_epoch=5000,
                     callbacks=[early_stopping, checkpointing, rateMonitoring], workers=1)
 
 
