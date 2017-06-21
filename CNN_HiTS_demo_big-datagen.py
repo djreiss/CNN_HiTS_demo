@@ -10,11 +10,7 @@ import gzip
 #import matplotlib.pyplot as plt
 #get_ipython().magic('matplotlib inline')
 
-
 # Put data loader into a function, break up potentially into train/valid/test subsets...
-
-# In[2]:
-
 def load_pkl_data(chunk_num, split_frac=(0.8, 0.9), verbose=False):
     fname = 'all_chunks/chunk_%d_5000.pkl.gz' % chunk_num
     pkl_data = np.load(gzip.GzipFile(fname, 'rb'), encoding='bytes')
@@ -61,17 +57,9 @@ def load_pkl_data(chunk_num, split_frac=(0.8, 0.9), verbose=False):
         
     return (X_train, Y_train), (X_valid, Y_valid), (X_test, Y_test)
 
-
-# In[3]:
-
-(X_train, Y_train), (X_test, Y_test), _ = load_pkl_data(188, (0.9, 1.0), verbose=True)
-
-
 # We create a Keras sequential model and compile it.
 
-# In[4]:
-
-from IPython.display import SVG
+# from IPython.display import SVG
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Convolution2D, MaxPooling2D, ZeroPadding2D
@@ -162,45 +150,9 @@ def make_model(compile=True, epochs=100, lrate=0.04, dropout=0.5, decay=1./10000
     return model
 
 
-# In[5]:
-
-epochs = 25
-model = make_model(epochs=25)
-
-
-# In[6]:
-
-print(model.summary())
-
 
 # Now, we fit our model to the training data-set
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[107]:
+# This func is not used, the model is run below...
 
 def run_model(model, train, valid, epochs=25, batch_size=32, data_augmentation=True, 
               patience=5, **kwargs):
@@ -247,125 +199,7 @@ def run_model(model, train, valid, epochs=25, batch_size=32, data_augmentation=T
 
 seed = 666
 np.random.seed(seed)
-model = make_model()
-
-# model, histry = run_model(model, (X_train, Y_train), (X_valid, Y_valid), data_augmentation=False)score = model.evaluate(X_test, Y_test)
-# print('Test loss:', score[0])
-# print('Test accuracy:', score[1])np.random.seed(seed)
-# model = make_model()
-# model, histry = run_model(model, (X_train, Y_train), (X_valid, Y_valid), data_augmentation=True,
-#                          patience=10)
-# score = model.evaluate(X_test, Y_test)
-# print('Test loss:', score[0])
-# print('Test accuracy:', score[1])from sklearn import metrics
-# pred = model.predict_classes(X_test)
-# print(metrics.classification_report(Y_test[:,1].astype(int), pred))
-
-#fpr, tpr, thresholds = metrics.roc_curve(Y_test[:,1].astype(int), pred)
-#plt.plot(fpr, tpr, label='ROC Curve')
-#plt.xlabel('FPR'); plt.ylabel('TPR (recall)')ypred = pred
-ytest = Y_test[:, 1].astype(int)
-
-# N_plot = 10
-# only_plot_wrong = True
-# if not only_plot_wrong:
-#     plot_inds = range(N_plot)
-# else:
-#     plot_inds = np.where(ypred != ytest)[0]
-#     if len(plot_inds) > N_plot:
-#         plot_inds = plot_inds[:N_plot]
-# N_plot = len(plot_inds)
-
-# plt.clf()
-# fig, axes = plt.subplots(N_plot, 4, figsize=(4, N_plot*1.2),
-#                         subplot_kw={'xticks': [], 'yticks': []})
-# i = 0
-# for ind in plot_inds:
-#     axes.flat[4*i].imshow(X_test[ind][0], interpolation = "none")
-#     axes.flat[4*i + 1].imshow(X_test[ind][1], interpolation = "none")
-#     axes.flat[4*i + 2].imshow(X_test[ind][2], interpolation = "none")
-#     axes.flat[4*i + 3].imshow(X_test[ind][3], interpolation = "none")
-
-#     axes.flat[4*i + 3].set_title ("predicted pbb = " + str(np.round(ypred[ind], 2)) + 
-#                                   ", label = " + str(ytest[ind]))
-#     i += 1
-# plt.show()
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# Now try fitting a large number of data in batches:
-
-# In[7]:
-
-n_data = 100  # number of datasets to run
-seed = 666
 batch_size = 32
-epochs = 1  # 10   # Probably want to stop around 25 but now we have auto-stopping
-
-
-# In[94]:
-
-# np.random.seed(seed)
-# model = make_model()
-
-# for iter in range(100:)
-#     for d in range(n_data):
-#         (X_train, Y_train), (X_valid, Y_valid), (X_test, Y_test) = load_pkl_data(d)
-#         _, history = run_model(model, (X_train, Y_train), (X_valid, Y_valid), 
-#                   data_augmentation=True, verbose=0)
-#         score = model.evaluate(X_test, Y_test, verbose=0)
-#         print('Iter %d, Dataset %d: Test loss = %f; Test accuracy = %f' % (iter, d, score[0], score[1]))
-#         if iter > 0 and iter % 10 == 0:
-#             model.save('models/CNN_HiTS_demo_big_%02d.hdf5' % iter)
-
-
-# # In[95]:
-
-# model.save('models/CNN_HiTS_demo_big_FINAL.hdf5')
-
-
-# In[ ]:
-
-# fpr, tpr, thresholds = metrics.roc_curve(Y_test[:,1].astype(int), pred)
-# plt.plot(fpr, tpr, label='ROC Curve')
-# plt.xlabel('FPR'); plt.ylabel('TPR (recall)')
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
-
-
-# Try using `fit_generator()` with a data generator.
-
-# In[8]:
 
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -381,12 +215,6 @@ imageDatagen = ImageDataGenerator(
     height_shift_range=0.,  # randomly shift images vertically (fraction of total height)
     horizontal_flip=True,  # randomly flip images
     vertical_flip=True)  # randomly flip images
-
-
-
-# In[22]:
-
-batch_size = 32
 
 def data_generator_train():
     data_range = np.arange(200)  # use inds 0-200 for training
@@ -418,17 +246,25 @@ class SGDLearningRateTracker(keras.callbacks.Callback):
         lr = kbackend.eval(optimizer.lr * (1. / (1. + optimizer.decay * optimizer.iterations)))
         print('\nLR: %.8f\n' % lr)
 
-# In[ ]:
-
+# Note that setting the decay smaller (e.g. 1/100000) makes the model go to random quickly.
 epochs = 10000
-model = make_model(compile=True, epochs=epochs, lrate=0.04, decay=1./100000.)
+
+import os.path
+if os.path.isfile('best_model.hdf5'):  # link this name to your favorite model to re-load it
+    print('Loading "best_model.hdf5"')
+    model = keras.models.load_model('./best_model.hdf5')
+else:
+    model = make_model(compile=True, epochs=epochs, lrate=0.04, decay=1./10000.)
+
+print(model.summary())
 
 train_generator = data_generator_train()
 valid_generator = data_generator_valid()
 
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 early_stopping = EarlyStopping(monitor='val_loss', patience=1000)
-checkpointing = ModelCheckpoint('./best_model.hdf5', monitor='val_loss', verbose=1,
+checkpointing = ModelCheckpoint('model.{epoch:06d}-{val_loss:.6f}.hdf5', # './best_model.hdf5',
+                                monitor='val_loss', verbose=1,
                                 save_best_only=True, save_weights_only=False,
                                 mode='auto', period=1)
 
