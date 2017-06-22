@@ -253,7 +253,7 @@ import os.path
 if os.path.isfile('best_model.hdf5'):  # link this name to your favorite model to re-load it
     print('Loading "best_model.hdf5"')
     model = keras.models.load_model('./best_model.hdf5')
-    initial_epoch = 27   ## <- change this depending on restart!
+    initial_epoch = 35   ## <- change this depending on restart!
 else:
     model = make_model(compile=True, epochs=epochs, lrate=0.04, decay=1./10000.)
     initial_epoch = 0
@@ -274,13 +274,15 @@ rateMonitoring = SGDLearningRateTracker()
 
 # steps_per_epoch=5000: 5000/32=156 chunks trained per epoch,
 # then validation_steps=500: 500/32=15.6 chunks tested per epoch
-model.fit_generator(generator=train_generator, 
+history = model.fit_generator(generator=train_generator, 
                     validation_data=valid_generator, validation_steps=1500,
                     epochs=epochs, steps_per_epoch=5000, initial_epoch=initial_epoch,
                     callbacks=[early_stopping, checkpointing, rateMonitoring], workers=1)
 
 
-# In[ ]:
+import pickle
+with open('/FINAL_trainHistoryDict.pkl', 'wb') as file:
+    pickle.dump(history.history, file)
 
 
 
