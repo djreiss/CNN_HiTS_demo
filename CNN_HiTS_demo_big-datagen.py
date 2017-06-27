@@ -199,7 +199,7 @@ def run_model(model, train, valid, epochs=25, batch_size=32, data_augmentation=T
 
 seed = 666
 np.random.seed(seed)
-batch_size = 32
+batch_size = 50
 
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -245,9 +245,15 @@ class SGDLearningRateTracker(keras.callbacks.Callback):
         optimizer = self.model.optimizer
         lr = kbackend.eval(optimizer.lr * (1. / (1. + optimizer.decay * optimizer.iterations)))
         print('\nLR: %.8f\n' % lr)
+        print('opt.lr=%.8f; opt.decay=%.8f; opt.iter=%.8f:'%(kbackend.eval(optimizer.lr),
+                                                             kbackend.eval(optimizer.decay),
+                                                             kbackend.eval(optimizer.iterations)))
 
 # Note that setting the decay smaller (e.g. 1/100000) makes the model go to random quickly.
-epochs = 10000
+# Note that for the learning rate, 'iterations' is actually number of *batches* run (not number of epochs run)!
+epochs = 3000
+lrate = 0.04
+decay = 1./10000. #1./1000.
 
 import os.path
 if os.path.isfile('best_model.hdf5'):  # link this name to your favorite model to re-load it
@@ -255,7 +261,7 @@ if os.path.isfile('best_model.hdf5'):  # link this name to your favorite model t
     model = keras.models.load_model('./best_model.hdf5')
     initial_epoch = 35   ## <- change this depending on restart!
 else:
-    model = make_model(compile=True, epochs=epochs, lrate=0.04, decay=1./10000.)
+    model = make_model(compile=True, epochs=epochs, lrate=lrate, decay=decay)
     initial_epoch = 0
 
 print(model.summary())
@@ -275,14 +281,13 @@ rateMonitoring = SGDLearningRateTracker()
 # steps_per_epoch=5000: 5000/32=156 chunks trained per epoch,
 # then validation_steps=500: 500/32=15.6 chunks tested per epoch
 history = model.fit_generator(generator=train_generator, 
-                    validation_data=valid_generator, validation_steps=1500,
-                    epochs=epochs, steps_per_epoch=5000, initial_epoch=initial_epoch,
+                    validation_data=valid_generator, validation_steps=2500,
+                    epochs=epochs, steps_per_epoch=2500, initial_epoch=initial_epoch,
                     callbacks=[early_stopping, checkpointing, rateMonitoring], workers=1)
 
 
-import pickle
-with open('/FINAL_trainHistoryDict.pkl', 'wb') as file:
-    pickle.dump(history.history, file)
+import pickle, gzip
+pickle.dump(gzip.GzipFile('./FINAL_trainHistoryDict.pkl.gz', 'wb'))
 
 
 
